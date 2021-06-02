@@ -1,3 +1,4 @@
+// @ts-nocheck 
 import StarportSigningClient from './libs/starportSigningClient'
 import { IbcClient, Link } from '@confio/relayer/build'
 import { Registry, DirectSecp256k1HdWallet } from '@cosmjs/proto-signing'
@@ -151,7 +152,7 @@ const init = () => (dispatch, getState) => {
     })
 }
 
-const createRelayer = createAsyncThunk('relayer/createRelayer', async ({ name, prefix, endpoint, gasPrice, chainId, channelId, external }, thunkAPI) => {
+const createRelayer = createAsyncThunk('relayer/createRelayer', async ({ name, prefix, endpoint, gasPrice, chainId, channelId, external }: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
     let relayer
 			if (!external) {
@@ -178,22 +179,22 @@ const createRelayer = createAsyncThunk('relayer/createRelayer', async ({ name, p
 			}
 			if (!external) {
 				const signerA = await DirectSecp256k1HdWallet.fromMnemonic(
-					walletGetters.getMnemonic(getState()),
-					stringToPath(walletGetters.getPath(getState())),
-					envGetters.addrPrefix(getState()),
+					walletGetters.getMnemonic(getState().wallet),
+					stringToPath(walletGetters.getPath(getState().wallet)),
+					envGetters.addrPrefix(getState().env),
 				)
 				const signerB = await DirectSecp256k1HdWallet.fromMnemonic(
-					walletGetters.getMnemonic(getState()),
-					stringToPath(walletGetters.getPath(getState())),
+					walletGetters.getMnemonic(getState().wallet),
+					stringToPath(walletGetters.getPath(getState().wallet)),
 					relayer.prefix,
 				)
 				const [accountB] = await signerB.getAccounts()
 				const optionsA = {
-					prefix: envGetters.addrPrefix(getState()),
-					gasPrice: GasPrice.fromString(walletGetters.gasPrice(getState())),
+					prefix: envGetters.addrPrefix(getState().env),
+					gasPrice: GasPrice.fromString(walletGetters.gasPrice(getState().wallet)),
 					registry: ibcRegistry(),
 				}
-				const tmClientA = await Tendermint34Client.connect(envGetters.apiTendermint(getState()))
+				const tmClientA = await Tendermint34Client.connect(envGetters.apiTendermint(getState().env))
 				const signingClientA = new StarportSigningClient(tmClientA, signerA, optionsA)
 				relayer.chainIdA = await signingClientA.getChainId()
 				const optionsB = {
@@ -207,24 +208,24 @@ const createRelayer = createAsyncThunk('relayer/createRelayer', async ({ name, p
 				relayer.targetAddress = accountB.address
 			}
 			dispatch(CREATE_RELAYER(relayer))
-			dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState())))
+			dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState().relayers)))
 })
 
-const loadRelayer = createAsyncThunk('relayer/loadRelayer', async (name, thunkAPI) => {
+const loadRelayer = createAsyncThunk('relayer/loadRelayer', async (name: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
-    const relayer = relayersGetters.getRelayer(getState(), name)
+    const relayer = relayersGetters.getRelayer(getState().relayers, name)
     if (relayer.status !== 'linked' && relayer.status !== 'connected') {
         throw new SpError('relayers:connectRelayer', 'Relayer already connected.')
     }
     try {
         const signerA = await DirectSecp256k1HdWallet.fromMnemonic(
-            walletGetters.getMnemonic(getState()),
-            stringToPath(walletGetters.getPath(getState())),
-            envGetters.addrPrefix(getState()),
+            walletGetters.getMnemonic(getState().wallet),
+            stringToPath(walletGetters.getPath(getState().wallet)),
+            envGetters.addrPrefix(getState().env),
         )
         const signerB = await DirectSecp256k1HdWallet.fromMnemonic(
-            walletGetters.getMnemonic(getState()),
-            stringToPath(walletGetters.getPath(getState())),
+            walletGetters.getMnemonic(getState().wallet),
+            stringToPath(walletGetters.getPath(getState().wallet)),
             relayer.prefix,
         )
         const [accountA] = await signerA.getAccounts()
@@ -250,12 +251,12 @@ const loadRelayer = createAsyncThunk('relayer/loadRelayer', async (name, thunkAP
             },
         }
         const optionsA = {
-            prefix: envGetters.addrPrefix(getState()),
+            prefix: envGetters.addrPrefix(getState().env),
             logger: transientLog,
-            gasPrice: GasPrice.fromString(walletGetters.gasPrice(getState())),
+            gasPrice: GasPrice.fromString(walletGetters.gasPrice(getState().wallet)),
             registry: ibcRegistry(),
         }
-        const tmClientA = await Tendermint34Client.connect(envGetters.apiTendermint(getState()))
+        const tmClientA = await Tendermint34Client.connect(envGetters.apiTendermint(getState().env))
         const signingClientA = new StarportSigningClient(tmClientA, signerA, optionsA)
         const chainIdA = await signingClientA.getChainId()
         const optionsB = {
@@ -291,7 +292,7 @@ const loadRelayer = createAsyncThunk('relayer/loadRelayer', async (name, thunkAP
             },
         }
         dispatch(LINK_RELAYER(linkData))
-        dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState())))
+        dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState().relayers)))
         if (relayer.status != 'connected') {
             await dispatch(connectRelayer(relayer.name))
         } else {
@@ -304,21 +305,21 @@ const loadRelayer = createAsyncThunk('relayer/loadRelayer', async (name, thunkAP
     }
 })
 
-const linkRelayer = createAsyncThunk('relayer/linkRelayer', async ({ name }, thunkAPI) => {
+const linkRelayer = createAsyncThunk('relayer/linkRelayer', async ({ name }: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
-    const relayer = relayersGetters.getRelayer(getState(), name);
+    const relayer = relayersGetters.getRelayer(getState().relayers, name);
     if (relayer.status !== 'created') {
         throw new SpError('relayers:connectRelayer', 'Relayer already connected.')
     }
     try {
         const signerA = await DirectSecp256k1HdWallet.fromMnemonic(
-            walletGetters.getMnemonic(getState()),
-            stringToPath(walletGetters.getPath(getState())),
-            envGetters.addrPrefix(getState()),
+            walletGetters.getMnemonic(getState().wallet),
+            stringToPath(walletGetters.getPath(getState().wallet)),
+            envGetters.addrPrefix(getState().env),
         )
         const signerB = await DirectSecp256k1HdWallet.fromMnemonic(
-            walletGetters.getMnemonic(getState()),
-            stringToPath(walletGetters.getPath(getState())),
+            walletGetters.getMnemonic(getState().wallet),
+            stringToPath(walletGetters.getPath(getState().wallet)),
             relayer.prefix,
         )
         const [accountA] = await signerA.getAccounts()
@@ -344,12 +345,12 @@ const linkRelayer = createAsyncThunk('relayer/linkRelayer', async ({ name }, thu
             },
         }
         const optionsA = {
-            prefix: envGetters.addrPrefix(getState()),
+            prefix: envGetters.addrPrefix(getState().env),
             logger: transientLog,
-            gasPrice: GasPrice.fromString(walletGetters.gasPrice(getState())),
+            gasPrice: GasPrice.fromString(walletGetters.gasPrice(getState().wallet)),
             registry: ibcRegistry(),
         }
-        const tmClientA = await Tendermint34Client.connect(envGetters.apiTendermint(getState()))
+        const tmClientA = await Tendermint34Client.connect(envGetters.apiTendermint(getState().env))
         const signingClientA = new StarportSigningClient(tmClientA, signerA, optionsA)
         const chainIdA = await signingClientA.getChainId()
         const optionsB = {
@@ -380,31 +381,31 @@ const linkRelayer = createAsyncThunk('relayer/linkRelayer', async ({ name }, thu
             },
         }
         dispatch(LINK_RELAYER(linkData))
-        dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState())))
+        dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState().relayers)))
         await dispatch(connectRelayer(name))
     } catch (e) {
         console.error(e)
     }
 })
 
-const connectRelayer = createAsyncThunk('relayer/connectRelayer', async (name, thunkAPI) => {
+const connectRelayer = createAsyncThunk('relayer/connectRelayer', async (name: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
-    const relayerLink = relayersGetters.getRelayer(getState(), name)
+    const relayerLink = relayersGetters.getRelayer(getState().relayers, name)
     const channels = await relayerLink.createChannel('A', 'transfer', 'transfer', 1, 'ics20-1')
     const channelData = {
         name,
         ...channels,
     }
     dispatch(CONNECT_RELAYER(channelData))
-    dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState())))
+    dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState().relayers)))
     dispatch(runRelayer(name))
 })
 
-const runRelayer = createAsyncThunk('relayer/runRelayer', async (name, thunkAPI) => {
+const runRelayer = createAsyncThunk('relayer/runRelayer', async (name: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
-    const relayerLink = relayersGetters.getRelayer(getState(), name)
+    const relayerLink = relayersGetters.getRelayer(getState().relayers, name)
     dispatch(RUN_RELAYER(name))
-    dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState())))
+    dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState().relayers)))
     dispatch(relayerLoop({
         name,
         link: relayerLink,
@@ -416,16 +417,16 @@ const stopRelayer = (name) => (dispatch) => {
     dispatch(STOP_RELAYER(name))
 }
 
-const relayerLoop = createAsyncThunk('relayer/relayerLoop', async ({ name, link, options }, thunkAPI) => {
+const relayerLoop = createAsyncThunk('relayer/relayerLoop', async ({ name, link, options }: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
-    let relayer = relayersGetters.getRelayer(getState(), name)
+    let relayer = relayersGetters.getRelayer(getState().relayers, name)
     let nextRelay = relayer.heights ?? {}
-    while (relayersGetters.getRelayer(getState(), name).running) {
+    while (relayersGetters.getRelayer(getState().relayers, name).running) {
         try {
             // TODO: make timeout windows more configurable
             nextRelay = await link.checkAndRelayPacketsAndAcks(nextRelay, 2, 6)
             dispatch(LAST_QUERIED_HEIGHTS({ name, heights: nextRelay }))
-            dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState())))
+            dispatch(WalletAction.updateRelayers(relayersGetters.getRelayers(getState().relayers)))
             await link.updateClientIfStale('A', options.maxAgeDest)
             await link.updateClientIfStale('B', options.maxAgeSrc)
         } catch (e) {

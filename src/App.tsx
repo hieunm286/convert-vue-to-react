@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import './scss/app.scss';
 import SpAmountSelect from "./components/SpAmountSelect";
 import SpTokenSend from "./components/SpTokenSend";
 import "./scss/app.scss";

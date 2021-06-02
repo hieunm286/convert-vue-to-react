@@ -5,11 +5,11 @@ import { sleep } from '@cosmjs/utils'
 // This is a wrapper around SigningStargateClient that waits up to an additional 1 minute for a Tx to be committed regardless of rpc endpoint timeout response
 
 export default class StarportSigningClient extends SigningStargateClient {
-	async signAndBroadcast(signerAddress, messages, fee, memo = '') {
+	async signAndBroadcast(signerAddress: any, messages: any, fee: any, memo = '') {
 		return super.signAndBroadcast(signerAddress, messages, fee, memo)
 	}
-	async broadcastTx(tx) {
-		let result
+	async broadcastTx(tx: any) {
+		let result: any
 		try {
 			result = await super.broadcastTx(tx)
 			return result
@@ -21,6 +21,7 @@ export default class StarportSigningClient extends SigningStargateClient {
 					let i = 0
 					while (i < 20) {
 						try {
+							// @ts-ignore
 							let res = await this.tmClient.tx({
 								hash: txHash,
 								prove: true,

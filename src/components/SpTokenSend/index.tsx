@@ -58,7 +58,7 @@ const SpTokenSend: React.FC<SpTokenSendProp> = (props) => {
             value,
             fee: ['0'],
             memo: '0',
-        }, reduxStore)) as any;
+        })) as any;
         console.log(txResult);
         if (txResult && !txResult.code) {
             // this.resetTransaction()

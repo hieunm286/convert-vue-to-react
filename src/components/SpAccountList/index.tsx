@@ -94,7 +94,7 @@ const SpAccountList: React.FC = () => {
   const createAccount = (): void => {
     if (_depsLoaded) {
       if (newAccount.nextAvailable) {
-        dispatch(WalletActions.addAccount());
+        dispatch(WalletActions.addAccount(undefined));
       } else {
         dispatch(WalletActions.addAccount(newAccount.pathIncrement));
       }

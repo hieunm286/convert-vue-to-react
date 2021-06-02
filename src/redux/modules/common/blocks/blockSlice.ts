@@ -1,3 +1,4 @@
+// @ts-nocheck 
 import axios from 'axios'
 import { sha256 } from '@cosmjs/crypto'
 import { fromBase64, toHex } from '@cosmjs/encoding'
@@ -106,7 +107,7 @@ export const blockGetters = {
 
 const init = () => (dispatch, getState) => {
     if (envGetters.client(getState())) {
-        envGetters.client(getState()).on('newblock', (data) => {
+        envGetters.client(getState().env).on('newblock', (data) => {
             dispatch(addBlock(data))
         })
     }
@@ -115,10 +116,10 @@ const addBlock = createAsyncThunk('blocks/addBlock', async (blockData, thunkAPI)
 	const { dispatch, getState } = thunkAPI;
     try {
         const blockDetails = await axios.get(
-            envGetters.apiTendermint(getState) + '/block?height=' + blockData.data.value.block.header.height,
+            envGetters.apiTendermint(getState().env) + '/block?height=' + blockData.data.value.block.header.height,
         )
         const txDecoded = blockData.data.value.block.data.txs.map(async (tx) => {
-            const dec = await decodeTx(envGetters.apiCosmos(getState()), envGetters.apiTendermint(getState()), tx)
+            const dec = await decodeTx(envGetters.apiCosmos(getState().env), envGetters.apiTendermint(getState().env), tx)
             return dec
         })
         const txs = await Promise.all(txDecoded)

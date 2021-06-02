@@ -1,3 +1,4 @@
+// @ts-nocheck 
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import Client from "@starport/client-js";
 import SpError from "../../../errors/SpError";
@@ -18,7 +19,7 @@ const wsNode =
   "ws://localhost:26657/websocket";
 const addrPrefix = process.env.REACT_APP_ADDRESS_PREFIX || "cosmos";
 
-const initialState = {
+const initialState: any = {
   chainId: "",
   addrPrefix: addrPrefix,
   sdkVersion: "Stargate",
@@ -115,7 +116,7 @@ export const envGetters = {
   wsConnected: (state) => state.wsConnected,
 };
 
-const initConfig = {
+const initConfig: any = {
   starportUrl: "http://localhost:12345",
   apiNode: apiNode,
   rpcNode: rpcNode,
@@ -143,7 +144,7 @@ const init = createAsyncThunk(
 const config = createAsyncThunk(
   "env/config",
   async (
-    config = {
+    config: any = {
       apiNode: "http://localhost:1317",
       rpcNode: "http://localhost:26657",
       wsNode: "ws://localhost:26657/websocket",
@@ -156,9 +157,9 @@ const config = createAsyncThunk(
     thunkAPI
   ) => {
 	const { dispatch, getState } = thunkAPI;
-    const state = getState();
+    const state: any = getState().env;
     try {
-      let client;
+      let client: any;
       if (!state.client) {
         client = new Client({
           apiAddr: config.apiNode,
@@ -166,23 +167,23 @@ const config = createAsyncThunk(
           wsAddr: config.wsNode,
         });
         client.setMaxListeners(0);
-        client.on("chain-id", (id) => {
+        client.on("chain-id", (id: any) => {
           if (id) {
             dispatch(SET_CHAIN_ID(id));
           }
         });
-        client.on("chain-name", (name) => {
+        client.on("chain-name", (name: any) => {
           if (name) {
             dispatch(SET_CHAIN_NAME(name));
           }
         });
-        client.on("ws-status", (status) =>
+        client.on("ws-status", (status: any) =>
           dispatch(setConnectivity({ connection: "ws", status: status }))
         );
-        client.on("api-status", (status) =>
+        client.on("api-status", (status: any) =>
           dispatch(setConnectivity({ connection: "api", status: status }))
         );
-        client.on("rpc-status", (status) =>
+        client.on("rpc-status", (status: any) =>
           dispatch(setConnectivity({ connection: "rpc", status: status }))
         );
         dispatch(SET_CONFIG(config));
@@ -263,7 +264,7 @@ const config = createAsyncThunk(
 // 			getTXApi: 'http://localhost:26657/tx?hash=0x',
 // 		}
 // 	) => async (dispatch, getState) => {
-// 		const state = getState();
+// 		const state: any = getState();
 // 		try {
 // 			let client
 // 			if (!state.client) {
@@ -347,11 +348,11 @@ const config = createAsyncThunk(
 // 		}
 // 	}
 
-const setTxAPI = (payload) => (dispatch) => {
+const setTxAPI = (payload: any) => (dispatch) => {
   dispatch(SET_TX_API(payload));
 };
 
-const setConnectivity = (payload) => (dispatch) => {
+const setConnectivity = (payload: any) => (dispatch) => {
     switch (payload.connection) {
       case "ws":
         dispatch(SET_WS_STATUS(payload.status));
@@ -367,8 +368,8 @@ const setConnectivity = (payload) => (dispatch) => {
     }
   }
 
-const signIn = createAsyncThunk("env/signIn", async (signer, { getState }) => {
-  const state = getState();
+const signIn = createAsyncThunk("env/signIn", async (signer: any, { getState }) => {
+  const state: any = getState().env;
   try {
     await state.client.useSigner(signer);
   } catch (e) {

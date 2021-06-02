@@ -176,7 +176,7 @@ const SpWalletCreate: React.FC<{ title?: string; close: () => void }> = ({
 
   const importWallet = async (): Promise<void> => {
     if (_depsLoaded) {
-      await dispatch(
+      dispatch(
         WalletActions.createWalletWithMnemonic({
           name: state.imported.name,
           mnemonic: state.imported.mnemonicOrKey,
@@ -265,7 +265,7 @@ const SpWalletCreate: React.FC<{ title?: string; close: () => void }> = ({
 
   const createWallet = async (): Promise<void> => {
     if (_depsLoaded) {
-      await dispatch(
+      dispatch(
         WalletActions.createWalletWithMnemonic({
           name: state.create.name,
           mnemonic: state.create.mnemonic,

@@ -1,5 +1,5 @@
+// @ts-nocheck 
 import { txClient, queryClient, MissingWalletError } from "./module";
-// @ts-ignore
 import { LastValidatorPower } from "./module/types/cosmos/staking/v1beta1/genesis";
 import { HistoricalInfo } from "./module/types/cosmos/staking/v1beta1/staking";
 import { CommissionRates } from "./module/types/cosmos/staking/v1beta1/staking";
@@ -240,10 +240,10 @@ export const cosmosStakingV1beta1Getters = {
 
 export const { RESET_STATE, QUERY, SUBSCRIBE, UNSUBSCRIBE } = cosmosStakingV1beta1Slice.actions;
 
-const init = (envGetters) => (dispatch, getState) => {
+const init = () => (dispatch, getState) => {
   console.log("module: ibc.applications.transfer.v1 initialized!");
   if (envGetters.client) {
-    envGetters.client(getState()).on("new block", () => {
+    envGetters.client(getState().env).on("new block", () => {
       dispatch(StoreUpdate());
     });
   }
@@ -258,7 +258,7 @@ const unsubscribe = (subscription) => (dispatch) => {
 };
 
 const StoreUpdate = createAsyncThunk('cosmos.staking.v1beta1/StoreUpdate', async (d, { dispatch, getState }) => {
-  getState()._Subscriptions.forEach(async (subscription) => {
+  getState().cosmosStakingV1beta1._Subscriptions.forEach(async (subscription) => {
     try {
       await dispatch(subscription.action(subscription.payload));
     } catch (e) {
@@ -271,10 +271,10 @@ const QueryValidators = createAsyncThunk('cosmos.staking.v1beta1/QueryValidators
     options: { subscribe, all } = { subscribe: false, all: false },
     params: { ...key },
     query = null,
-  }, { dispatch, getState }) => {
+  }: any, { dispatch, getState }) => {
     try {
       const state = getState();
-      const addr = envGetters.apiCosmos(state);
+      const addr = envGetters.apiCosmos(state.env);
       const queryClient = await initQueryClient(addr);
       let value = (await queryClient.queryValidators(query)).data;
       while (all && value.pagination && value.pagination.nextKey != null) {
@@ -297,7 +297,7 @@ const QueryValidators = createAsyncThunk('cosmos.staking.v1beta1/QueryValidators
 			payload: { options: { all }, params: { ...key }, query },
 		  }));
       return (
-        cosmosStakingV1beta1Getters["getValidators"]({
+        cosmosStakingV1beta1Getters["getValidators"](getState().cosmosStakingV1beta1, {
           params: { ...key },
           query,
         }) ?? {}
@@ -315,10 +315,10 @@ const QueryValidator = createAsyncThunk('cosmos.staking.v1beta1/QueryValidator',
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-      const addr = envGetters.apiCosmos(state);
+      const addr = envGetters.apiCosmos(state.env);
 		const queryClient = await initQueryClient(addr)
 		let value = (await queryClient.queryValidator(key.validator_addr)).data
 		dispatch(QUERY({
@@ -331,7 +331,7 @@ const QueryValidator = createAsyncThunk('cosmos.staking.v1beta1/QueryValidator',
 			action: QueryValidator,
 			payload: { options: { all }, params: { ...key }, query }
 		}))
-		return cosmosStakingV1beta1Getters['getValidator'](getState(), { params: { ...key }, query }) ?? {}
+		return cosmosStakingV1beta1Getters['getValidator'](getState().cosmosStakingV1beta1, { params: { ...key }, query }) ?? {}
 	} catch (e) {
 		throw new SpError(
 			'QueryClient:QueryValidator',
@@ -345,10 +345,10 @@ const QueryValidatorDelegations = createAsyncThunk('cosmos.staking.v1beta1/Query
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-      const addr = envGetters.apiCosmos(state);
+      const addr = envGetters.apiCosmos(state.env);
 		const queryClient = await initQueryClient(addr)
 		let value = (
 			await queryClient.queryValidatorDelegations(key.validator_addr, query)
@@ -373,7 +373,7 @@ const QueryValidatorDelegations = createAsyncThunk('cosmos.staking.v1beta1/Query
 			payload: { options: { all }, params: { ...key }, query }
 		}))
 		return (
-			cosmosStakingV1beta1Getters['getValidatorDelegations'](getState(), { params: { ...key }, query }) ??
+			cosmosStakingV1beta1Getters['getValidatorDelegations'](getState().cosmosStakingV1beta1, { params: { ...key }, query }) ??
 			{}
 		)
 	} catch (e) {
@@ -389,10 +389,10 @@ const QueryValidatorUnbondingDelegations = createAsyncThunk('cosmos.staking.v1be
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-      const addr = envGetters.apiCosmos(state);
+      const addr = envGetters.apiCosmos(state.env);
 		const queryClient = await initQueryClient(addr)
 		let value = (
 			await queryClient.queryValidatorUnbondingDelegations(
@@ -420,7 +420,7 @@ const QueryValidatorUnbondingDelegations = createAsyncThunk('cosmos.staking.v1be
 			payload: { options: { all }, params: { ...key }, query }
 		}))
 		return (
-			cosmosStakingV1beta1Getters['getValidatorUnbondingDelegations']({
+			cosmosStakingV1beta1Getters['getValidatorUnbondingDelegations'](getState().cosmosStakingV1beta1, {
 				params: { ...key },
 				query
 			}) ?? {}
@@ -438,10 +438,10 @@ const QueryDelegation = createAsyncThunk('cosmos.staking.v1beta1/QueryDelegation
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-      const addr = envGetters.apiCosmos(state);
+      const addr = envGetters.apiCosmos(state.env);
 		const queryClient = await initQueryClient(addr)
 		let value = (
 			await queryClient.queryDelegation(
@@ -459,7 +459,7 @@ const QueryDelegation = createAsyncThunk('cosmos.staking.v1beta1/QueryDelegation
 			action: QueryDelegation,
 			payload: { options: { all }, params: { ...key }, query }
 		}))
-		return cosmosStakingV1beta1Getters['getDelegation'](getState(), { params: { ...key }, query }) ?? {}
+		return cosmosStakingV1beta1Getters['getDelegation'](getState().cosmosStakingV1beta1, { params: { ...key }, query }) ?? {}
 	} catch (e) {
 		throw new SpError(
 			'QueryClient:QueryDelegation',
@@ -473,10 +473,10 @@ const QueryUnbondingDelegation = createAsyncThunk('cosmos.staking.v1beta1/QueryU
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-      const addr = envGetters.apiCosmos(state);
+      const addr = envGetters.apiCosmos(state.env);
 		const queryClient = await initQueryClient(addr)
 		let value = (
 			await queryClient.queryUnbondingDelegation(
@@ -495,7 +495,7 @@ const QueryUnbondingDelegation = createAsyncThunk('cosmos.staking.v1beta1/QueryU
 			payload: { options: { all }, params: { ...key }, query }
 		}))
 		return (
-			cosmosStakingV1beta1Getters['getUnbondingDelegation'](getState(), { params: { ...key }, query }) ?? {}
+			cosmosStakingV1beta1Getters['getUnbondingDelegation'](getState().cosmosStakingV1beta1, { params: { ...key }, query }) ?? {}
 		)
 	} catch (e) {
 		throw new SpError(
@@ -510,10 +510,10 @@ const QueryDelegatorDelegations = createAsyncThunk('cosmos.staking.v1beta1/Query
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-		const addr = envGetters.apiCosmos(state);
+		const addr = envGetters.apiCosmos(state.env);
 		  const queryClient = await initQueryClient(addr)
 		let value = (
 			await queryClient.queryDelegatorDelegations(key.delegator_addr, query)
@@ -538,7 +538,7 @@ const QueryDelegatorDelegations = createAsyncThunk('cosmos.staking.v1beta1/Query
 			payload: { options: { all }, params: { ...key }, query }
 		}))
 		return (
-			cosmosStakingV1beta1Getters['getDelegatorDelegations'](getState(), { params: { ...key }, query }) ??
+			cosmosStakingV1beta1Getters['getDelegatorDelegations'](getState().cosmosStakingV1beta1, { params: { ...key }, query }) ??
 			{}
 		)
 	} catch (e) {
@@ -554,10 +554,10 @@ const QueryDelegatorUnbondingDelegations = createAsyncThunk('cosmos.staking.v1be
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-		const addr = envGetters.apiCosmos(state);
+		const addr = envGetters.apiCosmos(state.env);
 		  const queryClient = await initQueryClient(addr)
 		let value = (
 			await queryClient.queryDelegatorUnbondingDelegations(
@@ -585,7 +585,7 @@ const QueryDelegatorUnbondingDelegations = createAsyncThunk('cosmos.staking.v1be
 			payload: { options: { all }, params: { ...key }, query }
 		}))
 		return (
-			cosmosStakingV1beta1Getters['getDelegatorUnbondingDelegations']({
+			cosmosStakingV1beta1Getters['getDelegatorUnbondingDelegations'](getState().cosmosStakingV1beta1, {
 				params: { ...key },
 				query
 			}) ?? {}
@@ -603,10 +603,10 @@ const QueryRedelegations = createAsyncThunk('cosmos.staking.v1beta1/QueryRedeleg
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-		const addr = envGetters.apiCosmos(state);
+		const addr = envGetters.apiCosmos(state.env);
 		  const queryClient = await initQueryClient(addr)
 		let value = (
 			await queryClient.queryRedelegations(key.delegator_addr, query)
@@ -630,7 +630,7 @@ const QueryRedelegations = createAsyncThunk('cosmos.staking.v1beta1/QueryRedeleg
 			action: QueryRedelegations,
 			payload: { options: { all }, params: { ...key }, query }
 		}))
-		return cosmosStakingV1beta1Getters['getRedelegations'](getState(), { params: { ...key }, query }) ?? {}
+		return cosmosStakingV1beta1Getters['getRedelegations'](getState().cosmosStakingV1beta1, { params: { ...key }, query }) ?? {}
 	} catch (e) {
 		throw new SpError(
 			'QueryClient:QueryRedelegations',
@@ -644,10 +644,10 @@ const QueryDelegatorValidators = createAsyncThunk('cosmos.staking.v1beta1/QueryD
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) =>  {
+	}: any, { dispatch, getState }) =>  {
 	try {
 		const state = getState();
-		const addr = envGetters.apiCosmos(state);
+		const addr = envGetters.apiCosmos(state.env);
 		  const queryClient = await initQueryClient(addr)
 		let value = (
 			await queryClient.queryDelegatorValidators(key.delegator_addr, query)
@@ -672,7 +672,7 @@ const QueryDelegatorValidators = createAsyncThunk('cosmos.staking.v1beta1/QueryD
 			payload: { options: { all }, params: { ...key }, query }
 		}))
 		return (
-			cosmosStakingV1beta1Getters['getDelegatorValidators'](getState(), { params: { ...key }, query }) ?? {}
+			cosmosStakingV1beta1Getters['getDelegatorValidators'](getState().cosmosStakingV1beta1, { params: { ...key }, query }) ?? {}
 		)
 	} catch (e) {
 		throw new SpError(
@@ -687,10 +687,10 @@ const QueryDelegatorValidator = createAsyncThunk('cosmos.staking.v1beta1/QueryDe
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-		const addr = envGetters.apiCosmos(state);
+		const addr = envGetters.apiCosmos(state.env);
 		  const queryClient = await initQueryClient(addr)	
 		  let value = (
 			await queryClient.queryDelegatorValidator(
@@ -709,7 +709,7 @@ const QueryDelegatorValidator = createAsyncThunk('cosmos.staking.v1beta1/QueryDe
 			payload: { options: { all }, params: { ...key }, query }
 		}))
 		return (
-			cosmosStakingV1beta1Getters['getDelegatorValidator'](getState(), { params: { ...key }, query }) ?? {}
+			cosmosStakingV1beta1Getters['getDelegatorValidator'](getState().cosmosStakingV1beta1, { params: { ...key }, query }) ?? {}
 		)
 	} catch (e) {
 		throw new SpError(
@@ -724,10 +724,10 @@ const QueryHistoricalInfo = createAsyncThunk('cosmos.staking.v1beta1/QueryHistor
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-		const addr = envGetters.apiCosmos(state);
+		const addr = envGetters.apiCosmos(state.env);
 		  const queryClient = await initQueryClient(addr)
 		  let value = (await queryClient.queryHistoricalInfo(key.height)).data
 		  dispatch(QUERY({
@@ -740,7 +740,7 @@ const QueryHistoricalInfo = createAsyncThunk('cosmos.staking.v1beta1/QueryHistor
 			action: QueryHistoricalInfo,
 			payload: { options: { all }, params: { ...key }, query }
 		}))
-		return cosmosStakingV1beta1Getters['getHistoricalInfo'](getState(), { params: { ...key }, query }) ?? {}
+		return cosmosStakingV1beta1Getters['getHistoricalInfo'](getState().cosmosStakingV1beta1, { params: { ...key }, query }) ?? {}
 	} catch (e) {
 		throw new SpError(
 			'QueryClient:QueryHistoricalInfo',
@@ -754,10 +754,10 @@ const QueryPool = createAsyncThunk('cosmos.staking.v1beta1/QueryPool', async (
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-		const addr = envGetters.apiCosmos(state);
+		const addr = envGetters.apiCosmos(state.env);
 		  const queryClient = await initQueryClient(addr)
 		let value = (await queryClient.queryPool()).data
 		dispatch(QUERY({
@@ -770,7 +770,7 @@ const QueryPool = createAsyncThunk('cosmos.staking.v1beta1/QueryPool', async (
 			action: QueryPool,
 			payload: { options: { all }, params: { ...key }, query }
 		}))
-		return cosmosStakingV1beta1Getters['getPool'](getState(), { params: { ...key }, query }) ?? {}
+		return cosmosStakingV1beta1Getters['getPool'](getState().cosmosStakingV1beta1, { params: { ...key }, query }) ?? {}
 	} catch (e) {
 		throw new SpError(
 			'QueryClient:QueryPool',
@@ -784,10 +784,10 @@ const QueryParams = createAsyncThunk('cosmos.staking.v1beta1/QueryParams', async
 		options: { subscribe, all } = { subscribe: false, all: false },
 		params: { ...key },
 		query = null
-	}, { dispatch, getState }) => {
+	}: any, { dispatch, getState }) => {
 	try {
 		const state = getState();
-		const addr = envGetters.apiCosmos(state);
+		const addr = envGetters.apiCosmos(state.env);
 		  const queryClient = await initQueryClient(addr)
 		let value = (await queryClient.queryParams()).data
 		dispatch(QUERY({
@@ -800,7 +800,7 @@ const QueryParams = createAsyncThunk('cosmos.staking.v1beta1/QueryParams', async
 			action: QueryParams,
 			payload: { options: { all }, params: { ...key }, query }
 		}))
-		return cosmosStakingV1beta1Getters['getParams'](getState(), { params: { ...key }, query }) ?? {}
+		return cosmosStakingV1beta1Getters['getParams'](getState().cosmosStakingV1beta1, { params: { ...key }, query }) ?? {}
 	} catch (e) {
 		throw new SpError(
 			'QueryClient:QueryParams',
@@ -809,10 +809,10 @@ const QueryParams = createAsyncThunk('cosmos.staking.v1beta1/QueryParams', async
 	}
 })
 
-const sendMsgDelegate = createAsyncThunk('cosmos.staking.v1beta1/sendMsgDelegate', async ({ value, fee = [], memo = '' }, { getState }) => {
+const sendMsgDelegate = createAsyncThunk('cosmos.staking.v1beta1/sendMsgDelegate', async ({ value, fee = [], memo = '' }: any, { getState }) => {
 	try {
-		const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+		const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
 		const msg = await txClient.msgDelegate(value)
 		const result = await txClient.signAndBroadcast([msg], {
@@ -836,10 +836,10 @@ const sendMsgDelegate = createAsyncThunk('cosmos.staking.v1beta1/sendMsgDelegate
 })
 
 const sendMsgEditValidator = createAsyncThunk('cosmos.staking.v1beta1/sendMsgEditValidator', async (
-	{ value, fee = [], memo = '' }, { dispatch, getState }) => {
+	{ value, fee = [], memo = '' }: any, { dispatch, getState }) => {
 	try {
-		const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+		const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
 		const msg = await txClient.msgEditValidator(value)
 		const result = await txClient.signAndBroadcast([msg], {
@@ -863,10 +863,10 @@ const sendMsgEditValidator = createAsyncThunk('cosmos.staking.v1beta1/sendMsgEdi
 })
 
 const sendMsgCreateValidator = createAsyncThunk('cosmos.staking.v1beta1/sendMsgCreateValidator', async (
-	{ value, fee = [], memo = '' }, { dispatch, getState }) => {
+	{ value, fee = [], memo = '' }: any, { dispatch, getState }) => {
 	try {
-		const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+		const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
 		const msg = await txClient.msgCreateValidator(value)
 		const result = await txClient.signAndBroadcast([msg], {
@@ -889,10 +889,10 @@ const sendMsgCreateValidator = createAsyncThunk('cosmos.staking.v1beta1/sendMsgC
 	}
 })
 
-const sendMsgUndelegate = createAsyncThunk('cosmos.staking.v1beta1/sendMsgUndelegate', async ({ value, fee = [], memo = '' }, { getState }) => {
+const sendMsgUndelegate = createAsyncThunk('cosmos.staking.v1beta1/sendMsgUndelegate', async ({ value, fee = [], memo = '' }: any, { getState }) => {
 	try {
-		const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+		const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
 		const msg = await txClient.msgUndelegate(value)
 		const result = await txClient.signAndBroadcast([msg], {
@@ -916,10 +916,10 @@ const sendMsgUndelegate = createAsyncThunk('cosmos.staking.v1beta1/sendMsgUndele
 })
 
 const sendMsgBeginRedelegate = createAsyncThunk('cosmos.staking.v1beta1/sendMsgBeginRedelegate', async (
-	{ value, fee = [], memo = '' }, { dispatch, getState }) => {
+	{ value, fee = [], memo = '' }: any, { dispatch, getState }) => {
 	try {
-		const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+		const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
 		const msg = await txClient.msgBeginRedelegate(value)
 		const result = await txClient.signAndBroadcast([msg], {
@@ -942,10 +942,10 @@ const sendMsgBeginRedelegate = createAsyncThunk('cosmos.staking.v1beta1/sendMsgB
 	}
 })
 
-const MsgDelegate = createAsyncThunk('cosmos.staking.v1beta1/MsgDelegate', async ({ value }, { dispatch, getState }) => {
+const MsgDelegate = createAsyncThunk('cosmos.staking.v1beta1/MsgDelegate', async ({ value }: any, { dispatch, getState }) => {
 	try {
-		const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+		const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
 		const msg = await txClient.msgDelegate(value)
 		return msg
@@ -964,10 +964,10 @@ const MsgDelegate = createAsyncThunk('cosmos.staking.v1beta1/MsgDelegate', async
 	}
 })
 
-const MsgEditValidator = createAsyncThunk('cosmos.staking.v1beta1/MsgEditValidator', async ({ value }, { dispatch, getState }) => {
+const MsgEditValidator = createAsyncThunk('cosmos.staking.v1beta1/MsgEditValidator', async ({ value }: any, { dispatch, getState }) => {
 	try {
-		const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+		const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
 		const msg = await txClient.msgEditValidator(value)
 		return msg
@@ -986,10 +986,10 @@ const MsgEditValidator = createAsyncThunk('cosmos.staking.v1beta1/MsgEditValidat
 	}
 })
 
-const MsgCreateValidator = createAsyncThunk('cosmos.staking.v1beta1/MsgCreateValidator', async ({ value }, { dispatch, getState }) => {
+const MsgCreateValidator = createAsyncThunk('cosmos.staking.v1beta1/MsgCreateValidator', async ({ value }: any, { dispatch, getState }) => {
 	try {
-		const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+		const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
 		const msg = await txClient.msgCreateValidator(value)
 		return msg
@@ -1008,10 +1008,10 @@ const MsgCreateValidator = createAsyncThunk('cosmos.staking.v1beta1/MsgCreateVal
 	}
 })
 
-const MsgUndelegate = createAsyncThunk('cosmos.staking.v1beta1/MsgUndelegate', async ({ value }, { dispatch, getState }) => {
+const MsgUndelegate = createAsyncThunk('cosmos.staking.v1beta1/MsgUndelegate', async ({ value }: any, { dispatch, getState }) => {
 	try {
-		const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+		const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
 		const msg = await txClient.msgUndelegate(value)
 		return msg
@@ -1030,10 +1030,10 @@ const MsgUndelegate = createAsyncThunk('cosmos.staking.v1beta1/MsgUndelegate', a
 	}
 })
 
-const MsgBeginRedelegate = createAsyncThunk('cosmos.staking.v1beta1/MsgBeginRedelegate', async ({ value }, { dispatch, getState }) => {
+const MsgBeginRedelegate = createAsyncThunk('cosmos.staking.v1beta1/MsgBeginRedelegate', async ({ value }: any, { dispatch, getState }) => {
 	try {
-		const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+		const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
 		const msg = await txClient.msgBeginRedelegate(value)
 		return msg

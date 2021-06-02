@@ -1,3 +1,4 @@
+// @ts-nocheck 
 import { txClient, queryClient, MissingWalletError } from "./module";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { FungibleTokenPacketData } from "./module/types/ibc/applications/transfer/v1/transfer";
@@ -110,10 +111,10 @@ const ibcApplicationTransferGetters = {
   },
 };
 
-const init = (envGetters) => (dispatch, getState) => {
+const init = () => (dispatch, getState) => {
   console.log("module: ibc.applications.transfer.v1 initialized!");
   if (envGetters.client) {
-    envGetters.client(getState()).on("new block", () => {
+    envGetters.client(getState().env).on("new block", () => {
       dispatch(StoreUpdate());
     });
   }
@@ -130,7 +131,8 @@ const unsubscribe = (subscription) => (dispatch) => {
 const StoreUpdate = createAsyncThunk(
   "ibc.applications.transfer.v1/StoreUpdate",
   async (d, { dispatch, getState }) => {
-    getState()._Subscriptions.forEach(async (subscription) => {
+    getState().ibcApplicationsTransferV1._Subscriptions.forEach(async (subscription: any) => {
+      console.log(subscription)
       try {
         await dispatch(subscription.action(subscription.payload));
       } catch (e) {
@@ -144,9 +146,9 @@ const QueryDenomTrace = createAsyncThunk('ibc.applications.transfer.v1/QueryDeno
     options: { subscribe, all } = { subscribe: false, all: false },
     params: { ...key },
     query = null,
-  }, { dispatch, getState }) => {
+  }: any, { dispatch, getState }) => {
     try {
-      const addr = envGetters.apiCosmos(getState());
+      const addr = envGetters.apiCosmos(getState().env);
       const queryClient = await initQueryClient(addr);
       let value = (await queryClient.queryDenomTrace(key.hash)).data;
       dispatch(
@@ -164,7 +166,7 @@ const QueryDenomTrace = createAsyncThunk('ibc.applications.transfer.v1/QueryDeno
           })
         );
       return (
-        ibcApplicationTransferGetters["getDenomTrace"](getState(), {
+        ibcApplicationTransferGetters["getDenomTrace"](getState().ibcApplicationsTransferV1, {
           params: { ...key },
           query,
         }) ?? {}
@@ -181,9 +183,9 @@ const QueryDenomTraces = createAsyncThunk('ibc.applications.transfer.v1/QueryDen
     options: { subscribe, all } = { subscribe: false, all: false },
     params: { ...key },
     query = null,
-  }, { dispatch, getState }) => {
+  }: any, { dispatch, getState }) => {
     try {
-      const addr = envGetters.apiCosmos(getState());
+      const addr = envGetters.apiCosmos(getState().env);
       const queryClient = await initQueryClient(addr);
       let value = (await queryClient.queryDenomTraces(query)).data;
       while (all && value.pagination && value.pagination.nextKey != null) {
@@ -210,7 +212,7 @@ const QueryDenomTraces = createAsyncThunk('ibc.applications.transfer.v1/QueryDen
           })
         );
       return (
-        ibcApplicationTransferGetters["getDenomTraces"](getState(), {
+        ibcApplicationTransferGetters["getDenomTraces"](getState().ibcApplicationsTransferV1, {
           params: { ...key },
           query,
         }) ?? {}
@@ -227,9 +229,9 @@ const QueryParams = createAsyncThunk('ibc.applications.transfer.v1/QueryParams',
     options: { subscribe, all } = { subscribe: false, all: false },
     params: { ...key },
     query = null,
-  }, { dispatch, getState }) => {
+  }: any, { dispatch, getState }) => {
     try {
-      const addr = envGetters.apiCosmos(getState());
+      const addr = envGetters.apiCosmos(getState().env);
       const queryClient = await initQueryClient(addr);
       let value = (await queryClient.queryParams()).data;
       dispatch(
@@ -247,7 +249,7 @@ const QueryParams = createAsyncThunk('ibc.applications.transfer.v1/QueryParams',
           })
         );
       return (
-        ibcApplicationTransferGetters["getParams"](getState(), {
+        ibcApplicationTransferGetters["getParams"](getState().ibcApplicationsTransferV1, {
           params: { ...key },
           query,
         }) ?? {}
@@ -260,10 +262,10 @@ const QueryParams = createAsyncThunk('ibc.applications.transfer.v1/QueryParams',
     }
   });
 
-const sendMsgTransfer = createAsyncThunk('ibc.applications.transfer.v1/sendMsgTransfer', async ({ value, fee = [], memo = "" }, { getState }) => {
+const sendMsgTransfer = createAsyncThunk('ibc.applications.transfer.v1/sendMsgTransfer', async ({ value, fee = [], memo = "" }: any, { getState }) => {
     try {
-      const signerWallet = walletGetters.signer(getState());
-      const addr = envGetters.apiTendermint(getState());
+      const signerWallet = walletGetters.signer(getState().wallet);
+      const addr = envGetters.apiTendermint(getState().env);
       const txClient = await initTxClient(signerWallet, addr);
       const msg = await txClient.msgTransfer(value);
       const result = await txClient.signAndBroadcast([msg], {
@@ -286,10 +288,10 @@ const sendMsgTransfer = createAsyncThunk('ibc.applications.transfer.v1/sendMsgTr
     }
   });
 
-const MsgTransfer = createAsyncThunk('ibc.applications.transfer.v1/MsgTransfer', async ({ value }, { getState }) => {
+const MsgTransfer = createAsyncThunk('ibc.applications.transfer.v1/MsgTransfer', async ({ value }: any, { getState }) => {
     try {
-      const signerWallet = walletGetters.signer(getState());
-      const addr = envGetters.apiTendermint(getState());
+      const signerWallet = walletGetters.signer(getState().wallet);
+      const addr = envGetters.apiTendermint(getState().env);
       const txClient = await initTxClient(signerWallet, addr);
       const msg = await txClient.msgTransfer(value);
       return msg;

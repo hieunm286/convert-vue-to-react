@@ -1,3 +1,4 @@
+// @ts-nocheck 
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import axios from 'axios'
 import SpError from '../../../errors/SpError'
@@ -42,8 +43,8 @@ export const transferGetters = {
 
 const init = () => (dispatch, getState) => {
     console.log('nodule: common.transfers initialized!')
-    if (envGetters.client(getState())) {
-        envGetters.client(getState()).on('newblock', () => {
+    if (envGetters.client(getState().env)) {
+        envGetters.client(getState().env).on('newblock', () => {
             dispatch(StoreUpdate())
         })
     }
@@ -58,21 +59,21 @@ const unsubscribe = (subscription) => (dispatch) => {
 }
 
 const StoreUpdate = () => (dispatch, getState) => {
-    getState()._Subscriptions.forEach((subscription) => {
+    getState().transfers._Subscriptions.forEach((subscription) => {
         dispatch(subscription.action(subscription.payload))
     })
 }
 
-const ServiceGetTxsEvent = createAsyncThunk('transfers/ServiceGetTxsEvent', async ({ subscribe = false, all = true, ...key }, thunkAPI) => {
+const ServiceGetTxsEvent = createAsyncThunk('transfers/ServiceGetTxsEvent', async ({ subscribe = false, all = true, ...key }: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI
     try {
         let value = (
-            await axios.get(envGetters.apiCosmos(getState()) + '/cosmos/tx/v1beta1/txs?events=' + key.event)
+            await axios.get(envGetters.apiCosmos(getState().env) + '/cosmos/tx/v1beta1/txs?events=' + key.event)
         ).data
 
         while (all && value.pagination && value.pagination.next_key != null) {
             let next_values = await axios.get(
-                envGetters.apiCosmos(getState()) +
+                envGetters.apiCosmos(getState().env) +
                     '/cosmos/tx/v1beta1/txs?events=' +
                     key.event +
                     '&pagination.key=' +

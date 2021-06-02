@@ -1,3 +1,4 @@
+// @ts-nocheck 
 import {
   DirectSecp256k1HdWallet,
   DirectSecp256k1Wallet,
@@ -10,7 +11,7 @@ import { keyFromWif, keyToWif } from "../../../helpers/keys";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import * as envActions from "../env/envSlice";
 
-const initialState = {
+const initialState: any = {
   wallets: JSON.parse(window.localStorage.getItem("wallets")) || [],
   activeWallet: null,
   activeClient: null,
@@ -21,9 +22,9 @@ const initialState = {
 
 const connectWithKeplr = createAsyncThunk(
   "wallet/connectWithKeplr",
-  async (accountSigner, thunkAPI) => {
+  async (accountSigner: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
-    const state = getState();
+    const state: any = getState().wallet;
     await dispatch(envActions.signIn(accountSigner));
 
     const wallet = {
@@ -31,7 +32,7 @@ const connectWithKeplr = createAsyncThunk(
       mnemonic: null,
       HDpath: null,
       password: null,
-      prefix: envActions.envGetters.addrPrefix(state),
+      prefix: envActions.envGetters.addrPrefix(getState().env),
       pathIncrement: null,
       accounts: [],
     };
@@ -42,7 +43,7 @@ const connectWithKeplr = createAsyncThunk(
     try {
       await dispatch(envActions.signIn(accountSigner));
 
-      let client = envActions.envGetters.signingClient(getState());
+      let client = envActions.envGetters.signingClient(getState().env);
       dispatch(SET_ACTIVE_CLIENT(client));
       dispatch(SET_SELECTED_ADDRESS(account.address));
     } catch (e) {
@@ -54,9 +55,9 @@ const connectWithKeplr = createAsyncThunk(
 
 const unlockWallet = createAsyncThunk(
   "wallet/unlockWallet",
-  async ({ name, password }, thunkAPI) => {
+  async ({ name, password }: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
-    const state = getState();
+    const state: any = getState().wallet;
     const encryptedWallet =
       state.wallets[state.wallets.findIndex((x) => x.name === name)].wallet;
     let wallet;
@@ -74,12 +75,12 @@ const unlockWallet = createAsyncThunk(
       let accountSigner;
       if (wallet.name == "Keplr Integration") {
         accountSigner = window.getOfflineSigner(
-          envActions.envGetters.chainId(state)
+          envActions.envGetters.chainId(getState().env)
         );
       } else {
         accountSigner = await DirectSecp256k1HdWallet.fromMnemonic(
           wallet.mnemonic,
-          stringToPath(wallet.HDpath + wallet.accounts[0].pathIncrement),
+          stringToPath(wallet.HDpath + wallet.accounts[0].pathIncrement) as any,
           wallet.prefix
         );
       }
@@ -103,9 +104,9 @@ const updateRelayers = (relayers) => (dispatch) => {
 
 const switchAccount = createAsyncThunk(
   "wallet/switchAccount",
-  async (address, thunkAPI) => {
+  async (address: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
-    const state = getState();
+    const state = getState().wallet as any;
     if (!state) return;
     const accountIndex = state.activeWallet.accounts.findIndex(
       (acc) => acc.address == address
@@ -115,13 +116,13 @@ const switchAccount = createAsyncThunk(
       stringToPath(
         state.activeWallet.HDpath +
           state.activeWallet.accounts[accountIndex].pathIncrement
-      ),
+      ) as any,
       state.activeWallet.prefix
     );
 
     try {
       await dispatch(envActions.signIn(accountSigner));
-      let client = envActions.envGetters.signingClient(getState());
+      let client = envActions.envGetters.signingClient(getState().env);
       dispatch(SET_ACTIVE_CLIENT(client));
       const [account] = await accountSigner.getAccounts();
       dispatch(SET_SELECTED_ADDRESS(account.address));
@@ -133,9 +134,9 @@ const switchAccount = createAsyncThunk(
 
 const addAccount = createAsyncThunk(
   "wallet/addAccount",
-  async (pathIncrement, thunkAPI) => {
+  async (pathIncrement: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
-    const state = getState();
+    const state: any = getState().wallet;
     if (!state) return;
 
     if (!pathIncrement) {
@@ -143,9 +144,9 @@ const addAccount = createAsyncThunk(
       dispatch(PATH_INCREMENT());
     }
     const accountSigner = await DirectSecp256k1HdWallet.fromMnemonic(
-      state.activeWallet.mnemonic,
-      stringToPath(state.activeWallet.HDpath + pathIncrement),
-      state.activeWallet.prefix
+      getState().wallet.activeWallet.mnemonic,
+      stringToPath(getState().wallet.activeWallet.HDpath + pathIncrement) as any,
+      getState().wallet.activeWallet.prefix
     );
     const [acc] = await accountSigner.getAccounts();
     const account = {
@@ -153,7 +154,7 @@ const addAccount = createAsyncThunk(
       pathIncrement: parseInt(pathIncrement),
     };
     if (
-      state.activeWallet.accounts.findIndex(
+      getState().wallet.activeWallet.accounts.findIndex(
         (acc) => acc.address == account.address
       ) == -1
     ) {
@@ -166,15 +167,15 @@ const addAccount = createAsyncThunk(
 );
 
 const storeWallets = () => (dispatch, getState) => {
-  const state = getState();
+  const state: any = getState();
   if (!state) return;
-  window.localStorage.setItem("wallets", JSON.stringify(state.wallets));
+  window.localStorage.setItem("wallets", JSON.stringify(getState().wallet.wallets));
   dispatch(SET_BACKUP_STATE(false));
 };
 
 const signInWithPrivateKey = createAsyncThunk(
   "wallet/signInWithPrivateKey",
-  async ({ prefix = "cosmos", privKey }, thunkAPI) => {
+  async ({ prefix = "cosmos", privKey }: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
     const pKey = keyFromWif(privKey.trim());
     const accountSigner = await DirectSecp256k1Wallet.fromKey(pKey, prefix);
@@ -182,7 +183,7 @@ const signInWithPrivateKey = createAsyncThunk(
 
     try {
       await dispatch(envActions.signIn(accountSigner));
-      let client = envActions.envGetters.signingClient(getState());
+      let client = envActions.envGetters.signingClient(getState().env);
       dispatch(SET_ACTIVE_CLIENT(client));
       dispatch(SET_SELECTED_ADDRESS(firstAccount.address));
     } catch (e) {
@@ -193,23 +194,23 @@ const signInWithPrivateKey = createAsyncThunk(
 
 const restoreWallet = createAsyncThunk(
   "wallet/restoreWallet",
-  async ({ encrypted, password }, thunkAPI) => {
+  async ({ encrypted, password }: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
-    const state = getState();
+    const state: any = getState();
     if (!state) return;
     const wallet = JSON.parse(
       CryptoJS.AES.decrypt(encrypted, password).toString(CryptoJS.enc.Utf8)
     );
     let newName = wallet.name;
     let incr = 1;
-    while (state.wallets.findIndex((x) => x.name == newName) != -1) {
+    while (getState().wallet.wallets.findIndex((x) => x.name == newName) != -1) {
       newName = wallet.name + "_" + incr;
       incr++;
     }
     wallet.name = newName;
     const accountSigner = await DirectSecp256k1HdWallet.fromMnemonic(
       wallet.mnemonic,
-      stringToPath(wallet.HDpath + "0"),
+      stringToPath(wallet.HDpath + "0") as any,
       wallet.prefix
     );
     const [firstAccount] = await accountSigner.getAccounts();
@@ -218,7 +219,7 @@ const restoreWallet = createAsyncThunk(
     try {
       await dispatch(envActions.signIn(accountSigner));
 
-      let client = envActions.envGetters.signingClient(getState());
+      let client = envActions.envGetters.signingClient(getState().env);
       dispatch(SET_ACTIVE_CLIENT(client));
       dispatch(SET_SELECTED_ADDRESS(firstAccount.address));
     } catch (e) {
@@ -238,7 +239,7 @@ const createWalletWithMnemonic = createAsyncThunk(
       HDpath = "m/44'/118'/0'/0/",
       prefix = "cosmos",
       password = null,
-    },
+    }: any,
     thunkAPI
   ) => {
     const { dispatch, getState } = thunkAPI;
@@ -253,7 +254,7 @@ const createWalletWithMnemonic = createAsyncThunk(
     };
     const accountSigner = await DirectSecp256k1HdWallet.fromMnemonic(
       mnemonic,
-      stringToPath(HDpath + "0"),
+      stringToPath(HDpath + "0") as any,
       prefix
     );
     const [firstAccount] = await accountSigner.getAccounts();
@@ -264,7 +265,7 @@ const createWalletWithMnemonic = createAsyncThunk(
     try {
       await dispatch(envActions.signIn(accountSigner));
 
-      let client = envActions.envGetters.signingClient(getState());
+      let client = envActions.envGetters.signingClient(getState().env);
       dispatch(SET_ACTIVE_CLIENT(client));
       dispatch(SET_SELECTED_ADDRESS(firstAccount.address));
     } catch (e) {
@@ -276,9 +277,9 @@ const createWalletWithMnemonic = createAsyncThunk(
 
 const sendTransaction = createAsyncThunk(
   "wallet/sendTransaction",
-  async ({ message, memo, denom }, thunkAPI) => {
+  async ({ message, memo, denom }: any, thunkAPI) => {
     const { dispatch, getState } = thunkAPI;
-    const state = getState();
+    const state: any = getState().wallet;
     const fee = {
       amount: [{ amount: "0", denom }],
       gas: "200000",

@@ -1,5 +1,5 @@
+// @ts-nocheck 
 import { txClient, queryClient, MissingWalletError } from './module'
-// @ts-ignore
 import { Params } from './module/types/cosmos/bank/v1beta1/bank'
 import { SendEnabled } from './module/types/cosmos/bank/v1beta1/bank'
 import { Input } from './module/types/cosmos/bank/v1beta1/bank'
@@ -151,10 +151,10 @@ export const cosmosBankV1beta1Getters = {
     }
 }
 
-const init = (envGetters) => (dispatch, getState) => {
+const init = () => (dispatch, getState) => {
     console.log('Vuex module: cosmos.bank.v1beta1 initialized!')
     if (envGetters.client) {
-      envGetters.client(getState()).on("new block", () => {
+      envGetters.client(getState().env).on("new block", () => {
         dispatch(StoreUpdate());
       });
     }
@@ -169,7 +169,7 @@ const init = (envGetters) => (dispatch, getState) => {
   };
 
   const StoreUpdate = createAsyncThunk('cosmos.bank.v1beta1/StoreUpdate', async (d, { dispatch, getState }) => {
-    getState()._Subscriptions.forEach(async (subscription) => {
+    getState().cosmosBankV1beta1._Subscriptions.forEach(async (subscription) => {
       try {
         await dispatch(subscription.action(subscription.payload));
       } catch (e) {
@@ -183,9 +183,9 @@ const init = (envGetters) => (dispatch, getState) => {
         options: { subscribe, all } = { subscribe: false, all: false },
         params: { ...key },
         query = null
-    }, { dispatch, getState }) => {
+    }: any, { dispatch, getState }) => {
     try {
-      const addr = envGetters.apiCosmos(getState());
+      const addr = envGetters.apiCosmos(getState().env);
         const queryClient = await initQueryClient(addr)
         let value = (await queryClient.queryBalance(key.address, key.denom))
             .data
@@ -199,7 +199,7 @@ const init = (envGetters) => (dispatch, getState) => {
             action: QueryBalance,
             payload: { options: { all }, params: { ...key }, query }
         }))
-        return cosmosBankV1beta1Getters['getBalance'](getState(), { params: { ...key }, query }) ?? {}
+        return cosmosBankV1beta1Getters['getBalance'](getState().cosmosBankV1beta1, { params: { ...key }, query }) ?? {}
     } catch (e) {
         throw new SpError(
             'QueryClient:QueryBalance',
@@ -213,9 +213,9 @@ const QueryAllBalances = createAsyncThunk('cosmos.bank.v1beta1/QueryAllBalances'
         options: { subscribe, all } = { subscribe: false, all: false },
         params: { ...key },
         query = null
-    }, { dispatch, getState }) => {
+    }: any, { dispatch, getState }) => {
     try {
-        const addr = envGetters.apiCosmos(getState());
+        const addr = envGetters.apiCosmos(getState().env);
         const queryClient = await initQueryClient(addr)
         let value = (await queryClient.queryAllBalances(key.address, query))
             .data
@@ -238,7 +238,7 @@ const QueryAllBalances = createAsyncThunk('cosmos.bank.v1beta1/QueryAllBalances'
             action: QueryAllBalances,
             payload: { options: { all }, params: { ...key }, query }
         }))
-        return cosmosBankV1beta1Getters['getAllBalances'](getState(), { params: { ...key }, query }) ?? {}
+        return cosmosBankV1beta1Getters['getAllBalances'](getState().cosmosBankV1beta1, { params: { ...key }, query }) ?? {}
     } catch (e) {
         throw new SpError(
             'QueryClient:QueryAllBalances',
@@ -252,9 +252,9 @@ const QueryTotalSupply = createAsyncThunk('cosmos.bank.v1beta1/QueryTotalSupply'
         options: { subscribe, all } = { subscribe: false, all: false },
         params: { ...key },
         query = null
-    }, { dispatch, getState }) => {
+    }: any, { dispatch, getState }) => {
     try {
-        const addr = envGetters.apiCosmos(getState());
+        const addr = envGetters.apiCosmos(getState().env);
         const queryClient = await initQueryClient(addr)
         let value = (await queryClient.queryTotalSupply()).data
         dispatch(QUERY({
@@ -267,7 +267,7 @@ const QueryTotalSupply = createAsyncThunk('cosmos.bank.v1beta1/QueryTotalSupply'
             action: QueryTotalSupply,
             payload: { options: { all }, params: { ...key }, query }
         }))
-        return cosmosBankV1beta1Getters['getTotalSupply'](getState(), { params: { ...key }, query }) ?? {}
+        return cosmosBankV1beta1Getters['getTotalSupply'](getState().cosmosBankV1beta1, { params: { ...key }, query }) ?? {}
     } catch (e) {
         throw new SpError(
             'QueryClient:QueryTotalSupply',
@@ -281,9 +281,9 @@ const QuerySupplyOf = createAsyncThunk('cosmos.bank.v1beta1/QuerySupplyOf', asyn
         options: { subscribe, all } = { subscribe: false, all: false },
         params: { ...key },
         query = null
-    }, { dispatch, getState }) => {
+    }: any, { dispatch, getState }) => {
     try {
-        const addr = envGetters.apiCosmos(getState());
+        const addr = envGetters.apiCosmos(getState().env);
         const queryClient = await initQueryClient(addr)
         let value = (await queryClient.querySupplyOf(key.denom)).data
         dispatch(QUERY({
@@ -296,7 +296,7 @@ const QuerySupplyOf = createAsyncThunk('cosmos.bank.v1beta1/QuerySupplyOf', asyn
             action: QuerySupplyOf,
             payload: { options: { all }, params: { ...key }, query }
         }))
-        return cosmosBankV1beta1Getters['getSupplyOf'](getState(), { params: { ...key }, query }) ?? {}
+        return cosmosBankV1beta1Getters['getSupplyOf'](getState().cosmosBankV1beta1, { params: { ...key }, query }) ?? {}
     } catch (e) {
         throw new SpError(
             'QueryClient:QuerySupplyOf',
@@ -310,9 +310,9 @@ const QueryParams = createAsyncThunk('cosmos.bank.v1beta1/QueryParams', async (
         options: { subscribe, all } = { subscribe: false, all: false },
         params: { ...key },
         query = null
-    }, { dispatch, getState }) => {
+    }: any, { dispatch, getState }) => {
     try {
-        const addr = envGetters.apiCosmos(getState());
+        const addr = envGetters.apiCosmos(getState().env);
         const queryClient = await initQueryClient(addr)
         let value = (await queryClient.queryParams()).data
         dispatch(QUERY({
@@ -325,7 +325,7 @@ const QueryParams = createAsyncThunk('cosmos.bank.v1beta1/QueryParams', async (
             action: QueryParams,
             payload: { options: { all }, params: { ...key }, query }
         }))
-        return cosmosBankV1beta1Getters['getParams'](getState(), { params: { ...key }, query }) ?? {}
+        return cosmosBankV1beta1Getters['getParams'](getState().cosmosBankV1beta1, { params: { ...key }, query }) ?? {}
     } catch (e) {
         throw new SpError(
             'QueryClient:QueryParams',
@@ -339,9 +339,9 @@ const QueryDenomMetadata = createAsyncThunk('cosmos.bank.v1beta1/QueryDenomMetad
         options: { subscribe, all } = { subscribe: false, all: false },
         params: { ...key },
         query = null
-    }, { dispatch, getState }) => {
+    }: any, { dispatch, getState }) => {
     try {
-        const addr = envGetters.apiCosmos(getState());
+        const addr = envGetters.apiCosmos(getState().env);
         const queryClient = await initQueryClient(addr)
         let value = (await queryClient.queryDenomMetadata(key.denom)).data
         dispatch(QUERY( {
@@ -354,7 +354,7 @@ const QueryDenomMetadata = createAsyncThunk('cosmos.bank.v1beta1/QueryDenomMetad
             action: QueryDenomMetadata,
             payload: { options: { all }, params: { ...key }, query }
         }))
-        return cosmosBankV1beta1Getters['getDenomMetadata'](getState(), { params: { ...key }, query }) ?? {}
+        return cosmosBankV1beta1Getters['getDenomMetadata'](getState().cosmosBankV1beta1, { params: { ...key }, query }) ?? {}
     } catch (e) {
         throw new SpError(
             'QueryClient:QueryDenomMetadata',
@@ -368,9 +368,9 @@ const QueryDenomsMetadata = createAsyncThunk('cosmos.bank.v1beta1/QueryDenomsMet
         options: { subscribe, all } = { subscribe: false, all: false },
         params: { ...key },
         query = null
-    }, { dispatch, getState }) => {
+    }: any, { dispatch, getState }) => {
     try {
-        const addr = envGetters.apiCosmos(getState());
+        const addr = envGetters.apiCosmos(getState().env);
         const queryClient = await initQueryClient(addr)
         let value = (await queryClient.queryDenomsMetadata(query)).data
         while (all && value.pagination && value.pagination.nextKey != null) {
@@ -392,7 +392,7 @@ const QueryDenomsMetadata = createAsyncThunk('cosmos.bank.v1beta1/QueryDenomsMet
             action: QueryDenomsMetadata,
             payload: { options: { all }, params: { ...key }, query }
         }))
-        return cosmosBankV1beta1Getters['getDenomsMetadata'](getState(), { params: { ...key }, query }) ?? {}
+        return cosmosBankV1beta1Getters['getDenomsMetadata'](getState().cosmosBankV1beta1, { params: { ...key }, query }) ?? {}
     } catch (e) {
         throw new SpError(
             'QueryClient:QueryDenomsMetadata',
@@ -401,11 +401,11 @@ const QueryDenomsMetadata = createAsyncThunk('cosmos.bank.v1beta1/QueryDenomsMet
     }
 })
 
-const sendMsgSend = createAsyncThunk('cosmos.bank.v1beta1/sendMsgSend', async ({ value, fee = [], memo = '' }, { getState }) => {
+const sendMsgSend = createAsyncThunk('cosmos.bank.v1beta1/sendMsgSend', async ({ value, fee = [], memo = '' }: any, { getState }) => {
     const store = getState()
     try {
-        const signerWallet = walletGetters.signer(store)
-		const addr = envGetters.apiTendermint(store)
+        const signerWallet = walletGetters.signer(store.wallet)
+		const addr = envGetters.apiTendermint(store.env)
 		const txClient = await initTxClient(signerWallet, addr)
         console.log('2222')
         console.log(txClient)
@@ -430,10 +430,10 @@ const sendMsgSend = createAsyncThunk('cosmos.bank.v1beta1/sendMsgSend', async ({
     }
 })
 
-const sendMsgMultiSend = createAsyncThunk('cosmos.bank.v1beta1/sendMsgMultiSend', async ({ value, fee = [], memo = '' }, { getState }) => {
+const sendMsgMultiSend = createAsyncThunk('cosmos.bank.v1beta1/sendMsgMultiSend', async ({ value, fee = [], memo = '' }: any, { getState }) => {
     try {
-        const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+        const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
         const msg = await txClient.msgMultiSend(value)
         const result = await txClient.signAndBroadcast([msg], {
@@ -456,10 +456,10 @@ const sendMsgMultiSend = createAsyncThunk('cosmos.bank.v1beta1/sendMsgMultiSend'
     }
 })
 
-const MsgSend = createAsyncThunk('cosmos.bank.v1beta1/MsgSend', async ({ value }, { getState }) => {
+const MsgSend = createAsyncThunk('cosmos.bank.v1beta1/MsgSend', async ({ value }: any, { getState }) => {
     try {
-        const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+        const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
         const msg = await txClient.msgSend(value)
         return msg
@@ -478,10 +478,10 @@ const MsgSend = createAsyncThunk('cosmos.bank.v1beta1/MsgSend', async ({ value }
     }
 })
 
-const MsgMultiSend = createAsyncThunk('cosmos.bank.v1beta1/MsgMultiSend', async ({ value }, { getState }) => {
+const MsgMultiSend = createAsyncThunk('cosmos.bank.v1beta1/MsgMultiSend', async ({ value }: any, { getState }) => {
     try {
-        const signerWallet = walletGetters.signer(getState())
-		const addr = envGetters.apiTendermint(getState())
+        const signerWallet = walletGetters.signer(getState().wallet)
+		const addr = envGetters.apiTendermint(getState().env)
 		const txClient = await initTxClient(signerWallet, addr)
         const msg = await txClient.msgMultiSend(value)
         return msg
